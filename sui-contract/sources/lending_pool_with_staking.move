@@ -8,6 +8,8 @@ module sui_lending_protocol::lending_pool_with_staking {
     use sui::table::{Self, Table};
     use sui_system::sui_system::{Self, SuiSystemState};
     use sui_system::staking_pool::StakedSui;
+    use sui_lending_protocol::stablecoin_simple::{Self, Treasury, SUSD};
+    use sui_lending_protocol::oracle_simple::{Self, PriceOracle};
 
     // Error codes
     const E_INSUFFICIENT_BALANCE: u64 = 1;
@@ -95,6 +97,8 @@ module sui_lending_protocol::lending_pool_with_staking {
     // Deposit SUI and allocate according to long/short ratio
     public entry fun deposit_and_stake_sui(
         pool: &mut LendingPoolWithStaking,
+        treasury: &mut Treasury,
+        oracle: &PriceOracle,
         sui_system: &mut SuiSystemState,
         deposit: Coin<SUI>,
         ctx: &mut TxContext
@@ -127,11 +131,13 @@ module sui_lending_protocol::lending_pool_with_staking {
 
         // Store the StakedSui object
         if (table::contains(&pool.staked_sui_objects, sender)) {
-            // If user already has staked SUI, we need to handle multiple stakes
-            // For simplicity, we'll abort and require users to withdraw first
-            abort E_INSUFFICIENT_BALANCE
+            // If user already has staked SUI, transfer existing stake back to user
+            // and replace with new stake (simplified approach)
+            let existing_staked = table::remove(&mut pool.staked_sui_objects, sender);
+            transfer::public_transfer(existing_staked, sender);
         };
 
+        // Store the new stake
         table::add(&mut pool.staked_sui_objects, sender, staked_sui);
 
         // Store short balance in protocol earnings for now (simplified)
@@ -152,6 +158,17 @@ module sui_lending_protocol::lending_pool_with_staking {
         position.deposited_amount = position.deposited_amount + amount;
         position.staking_start_epoch = current_epoch;
 
+        // Calculate USD value of deposited SUI using oracle price
+        let usd_value_cents = oracle_simple::calculate_usd_value(oracle, amount);
+        // Convert cents to MIST (SUSD units) - 1 USD = 1,000,000,000 MIST
+        let susd_amount = (usd_value_cents * 1_000_000_000) / 100;
+
+        // Mint SUSD equivalent to the USD value of deposited SUI
+        let susd_coin = stablecoin_simple::mint(treasury, susd_amount, ctx);
+
+        // Transfer SUSD to user
+        transfer::public_transfer(susd_coin, sender);
+
         // Update pool totals
         pool.total_deposits = pool.total_deposits + amount;
 
@@ -163,16 +180,22 @@ module sui_lending_protocol::lending_pool_with_staking {
         });
     }
 
-    // Withdraw SUI by unstaking from validator
+    // Withdraw SUI by burning SUSD and unstaking from validator
     public entry fun unstake_and_withdraw_sui(
         pool: &mut LendingPoolWithStaking,
+        treasury: &mut Treasury,
+        oracle: &PriceOracle,
         sui_system: &mut SuiSystemState,
-        amount: u64,
+        susd_payment: Coin<SUSD>,
         ctx: &mut TxContext
     ) {
-        assert!(amount > 0, E_INVALID_AMOUNT);
+        let susd_amount = coin::value(&susd_payment);
+        assert!(susd_amount > 0, E_INVALID_AMOUNT);
 
         let sender = tx_context::sender(ctx);
+
+        // Burn the SUSD payment first
+        stablecoin_simple::burn(treasury, susd_payment);
         let current_epoch = tx_context::epoch(ctx);
 
         assert!(table::contains(&pool.positions, sender), E_NO_POSITION);
@@ -180,12 +203,12 @@ module sui_lending_protocol::lending_pool_with_staking {
 
         let position = table::borrow_mut(&mut pool.positions, sender);
 
-        // Check if withdrawal maintains health factor for borrowed positions
-        if (position.borrowed_amount > 0) {
-            let new_deposited = position.deposited_amount - amount;
-            let max_borrow = (new_deposited * MAX_LTV) / PRECISION;
-            assert!(position.borrowed_amount <= max_borrow, E_INSUFFICIENT_COLLATERAL);
-        };
+        // Get the user's original deposited amount (full withdrawal)
+        let deposited_amount = position.deposited_amount;
+        assert!(deposited_amount > 0, E_INSUFFICIENT_BALANCE);
+
+        // For full withdrawal, check if user has any borrows (should be 0 for full withdrawal)
+        assert!(position.borrowed_amount == 0, E_INSUFFICIENT_COLLATERAL);
 
         // Remove and unstake the StakedSui object
         let staked_sui = table::remove(&mut pool.staked_sui_objects, sender);
@@ -215,9 +238,9 @@ module sui_lending_protocol::lending_pool_with_staking {
             balance::join(&mut pool.protocol_earnings, protocol_balance);
         };
 
-        // Update position
-        position.deposited_amount = position.deposited_amount - amount;
-        pool.total_deposits = pool.total_deposits - amount;
+        // Remove position completely (full withdrawal)
+        table::remove(&mut pool.positions, sender);
+        pool.total_deposits = pool.total_deposits - deposited_amount;
 
         // Transfer the withdrawn SUI to user
         let withdrawn_coin = coin::from_balance(withdrawal_balance, ctx);
@@ -225,7 +248,7 @@ module sui_lending_protocol::lending_pool_with_staking {
 
         sui::event::emit(StakeWithdrawn {
             user: sender,
-            amount,
+            amount: deposited_amount,
             rewards: user_rewards,
             epoch: current_epoch,
         });

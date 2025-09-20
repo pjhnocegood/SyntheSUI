@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { Providers } from './providers'
+import { WalletProvider } from './providers/WalletProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'SUI Staking Protocol',
-  description: 'Decentralized staking protocol on SUI blockchain',
+  title: 'Sui Oracle Dashboard',
+  description: 'Simple Oracle price monitoring and management',
 }
 
 export default function RootLayout({
@@ -18,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <WalletProvider>
+          {children}
+        </WalletProvider>
       </body>
     </html>
   )

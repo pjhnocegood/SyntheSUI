@@ -1,162 +1,136 @@
-# SUI Lending Protocol Frontend
+# Sui Oracle Lending Frontend
 
-Next.js frontend application for the SUI Lending Protocol.
+A Next.js frontend for a decentralized lending protocol built on the Sui blockchain.
 
 ## Features
 
-- 💰 **Deposit SUI**: Deposit SUI as collateral (automatically split 50/50 for staking and shorting)
-- 🏦 **Borrow Stablecoins**: Borrow up to 50% of collateral value in SUSD
-- 💳 **Repay Loans**: Repay borrowed stablecoins to unlock collateral
-- 📤 **Withdraw**: Withdraw collateral after loan repayment
-- 📊 **Position Dashboard**: Real-time position monitoring with health factor
-- 🔗 **Wallet Integration**: Seamless SUI wallet connection
-
-## Tech Stack
-
-- **Next.js 15**: React framework with App Router
-- **TypeScript**: Type safety
-- **Tailwind CSS**: Styling
-- **@mysten/dapp-kit**: SUI wallet integration
-- **@mysten/sui**: SUI SDK for blockchain interaction
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ installed
-- SUI wallet extension (Sui Wallet, Suiet, etc.)
-- Deployed SUI lending protocol contracts
-
-### Installation
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Update contract addresses in `lib/constants.ts`:
-```typescript
-export const CONTRACT_ADDRESSES = {
-  PACKAGE_ID: 'YOUR_PACKAGE_ID',
-  LENDING_POOL: 'YOUR_LENDING_POOL_ID',
-  // ... other addresses
-}
-```
-
-3. Run the development server:
-```bash
-npm run dev
-```
-
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
-
-## Project Structure
-
-```
-sui-lending-frontend/
-├── app/              # Next.js app directory
-│   ├── layout.tsx    # Root layout with providers
-│   ├── page.tsx      # Main lending interface
-│   └── globals.css   # Global styles
-├── components/       # React components
-│   ├── DepositPanel.tsx
-│   ├── BorrowPanel.tsx
-│   ├── RepayPanel.tsx
-│   ├── WithdrawPanel.tsx
-│   ├── PositionDashboard.tsx
-│   └── WalletButton.tsx
-├── hooks/           # Custom React hooks
-│   └── useLendingProtocol.ts
-└── lib/             # Utilities and constants
-    ├── constants.ts
-    └── sui-client.ts
-```
-
-## Usage
-
-1. **Connect Wallet**: Click "Connect Wallet" to connect your SUI wallet
-2. **Deposit**: Enter amount of SUI to deposit as collateral
-3. **Borrow**: Borrow up to 50% of collateral value in stablecoins
-4. **Monitor**: Watch your position health in the dashboard
-5. **Repay**: Repay borrowed stablecoins when ready
-6. **Withdraw**: Withdraw collateral after full repayment
-
-## Key Features
-
-### Automatic Asset Management
-- **50% Staking**: Half of deposits automatically staked for 5% APY
-- **50% Shorting**: Half used for short positions (hedging)
-
-### Risk Management
-- **Max LTV**: 50% maximum loan-to-value ratio
-- **Health Factor**: Real-time position health monitoring
-- **Liquidation**: Automatic liquidation at 75% threshold
+### Core Functionality
+- **Oracle Price Display**: Real-time price information from the oracle contract
+- **Lending Operations**: Deposit SUI tokens to earn interest
+- **Borrowing Operations**: Borrow against SUI collateral with 70% LTV
+- **Withdrawal Operations**: Withdraw deposits and manage positions
+- **Repayment Operations**: Repay loans and improve health factors
 
 ### User Interface
-- **Responsive Design**: Works on desktop and mobile
-- **Real-time Updates**: Position data refreshes automatically
-- **Tab Navigation**: Easy switching between actions
-- **Status Indicators**: Visual health factor indicators
+- **Wallet Integration**: Connect and manage Sui wallets
+- **Position Monitoring**: View deposits, borrows, and health factors
+- **Real-time Updates**: Automatic data refresh after transactions
+- **Responsive Design**: Works on desktop and mobile devices
 
-## Security
+## Quick Start
 
-- All transactions require wallet signature
-- Smart contract interactions are type-safe
-- Input validation on all forms
-- Error handling with user feedback
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-## Development
+2. **Set Up Environment Variables**
+   ```bash
+   cp .env.example .env.local
+   ```
+   Update the contract addresses after deploying the lending oracle contract.
 
-### Build for Production
-```bash
-npm run build
-```
-
-### Start Production Server
-```bash
-npm run start
-```
-
-## Environment Variables
-
-Create `.env.local` for environment-specific settings:
-
-```env
-NEXT_PUBLIC_NETWORK=testnet
-NEXT_PUBLIC_RPC_URL=https://fullnode.testnet.sui.io:443
-```
+3. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Contract Integration
 
-The frontend interacts with these smart contracts:
-- `lending_pool`: Main lending protocol
-- `stablecoin`: SUSD stablecoin
-- `price_oracle`: SUI price feed
-- `staking_manager`: Staking rewards
-- `short_position`: Short position management
+### Prerequisites
+1. Deploy the `lending_oracle` contract to Sui devnet
+2. Update environment variables with the contract addresses:
+   - `NEXT_PUBLIC_ORACLE_PACKAGE_ID`: The package ID from deployment
+   - `NEXT_PUBLIC_ORACLE_OBJECT_ID`: The oracle object ID from deployment
 
-## Testing
+### Contract Functions Used
+- **Read-only functions**:
+  - `get_price()`: Current oracle price
+  - `get_total_deposits()`: Total deposits in the pool
+  - `get_total_borrowed()`: Total borrowed amount
+  - `get_user_deposit()`: User's deposit amount
+  - `get_user_borrowed()`: User's borrowed amount
 
-1. Deploy contracts to testnet
-2. Update contract addresses
-3. Request test SUI from faucet
-4. Test all functions:
-   - Deposit flow
-   - Borrow flow
-   - Repay flow
-   - Withdraw flow
+- **Transaction functions**:
+  - `deposit()`: Deposit SUI to earn interest
+  - `withdraw()`: Withdraw deposited SUI
+  - `borrow()`: Borrow SUI against collateral
+  - `repay()`: Repay borrowed amount
+
+## Architecture
+
+### Components
+- `WalletButton`: Wallet connection and management
+- `OracleDisplay`: Shows oracle and pool information
+- `UserPositions`: Displays user's lending/borrowing positions
+- `LendingActions`: Deposit and borrow functionality
+- `WithdrawActions`: Withdraw and repay functionality
+
+### Hooks
+- `useOracle`: Fetches and manages oracle contract data
+- Wallet hooks from `@mysten/wallet-adapter-react`
+
+### Utilities
+- `suiClient`: Configured Sui client for devnet
+- `OracleTransactions`: Helper for building transactions
+
+## Security Considerations
+
+- **Collateral Ratio**: 70% LTV (Loan-to-Value) ratio enforced
+- **Health Factor**: Monitors liquidation risk
+- **Input Validation**: Client-side validation for all user inputs
+- **Error Handling**: Comprehensive error handling for all operations
+
+## Development
+
+### Tech Stack
+- **Frontend**: Next.js 14 with App Router
+- **Styling**: Tailwind CSS
+- **Blockchain**: Sui SDK (@mysten/sui.js)
+- **Wallet**: Sui Wallet Adapter
+- **TypeScript**: Full type safety
+
+### Project Structure
+```
+sui-frontend/
+├── app/
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── providers/
+│       └── WalletProvider.tsx
+├── components/
+│   ├── WalletButton.tsx
+│   ├── OracleDisplay.tsx
+│   ├── UserPositions.tsx
+│   ├── LendingActions.tsx
+│   └── WithdrawActions.tsx
+├── hooks/
+│   └── useOracle.ts
+└── lib/
+    └── suiClient.ts
+```
 
 ## Deployment
 
-### Deploy to Vercel
+1. **Build the application**
+   ```bash
+   npm run build
+   ```
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/sui-lending-frontend)
+2. **Deploy to Vercel, Netlify, or similar platform**
 
-1. Push to GitHub
-2. Connect to Vercel
-3. Configure environment variables
-4. Deploy
+3. **Update environment variables** in production with mainnet contract addresses
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
 ## License
 
-MIT
+MIT License - see LICENSE file for details.
