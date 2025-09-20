@@ -6,8 +6,8 @@ import { Providers } from './providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'SUI Lending Protocol',
-  description: 'Decentralized lending protocol on SUI blockchain',
+  title: 'SUI Staking Protocol',
+  description: 'Decentralized staking protocol on SUI blockchain',
 }
 
 export default function RootLayout({
