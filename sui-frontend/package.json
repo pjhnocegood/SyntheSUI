@@ -1,0 +1,31 @@
+{
+  "name": "sui-lending-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for SUI Lending Protocol",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@mysten/dapp-kit": "^0.18.0",
+    "@mysten/sui": "^1.38.0",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@tanstack/react-query": "^5.89.0",
+    "next": "^15.5.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.1.13",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2"
+  }
+}
