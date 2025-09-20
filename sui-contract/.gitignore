@@ -1,0 +1,87 @@
+# Move build artifacts
+/build/
+build/
+/target/
+target/
+
+# Move lock file (contains resolved dependencies)
+Move.lock
+
+# Deployment outputs
+deploy_output.txt
+deployment_log.txt
+*_deployment.log
+
+# SUI CLI generated files
+.sui/
+sui.log
+sui-*.log
+
+# Private keys and sensitive data
+*.key
+*.pem
+sui.keystore
+test-key.txt
+private-key.txt
+wallet.json
+mnemonic.txt
+seed.txt
+.env.local
+.env.*.local
+
+# Backup files
+backup/
+*.bak
+*.backup
+Move.toml.bak
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python scripts artifacts (if any)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Testing artifacts
+test-results/
+test-output/
+coverage/
+
+# Documentation builds
+/docs/build/
+/docs/dist/
+
+# Package manager artifacts
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Contract compilation artifacts
+*.wasm
+*.wat
+
+# Local development
+.local
+.cache
