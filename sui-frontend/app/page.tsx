@@ -22,7 +22,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">SyntheSUI</h1>
+                <h1 className="text-xl font-bold text-gray-900">NeuSUI</h1>
                 <p className="text-sm text-gray-500">Decentralized lending protocol</p>
               </div>
             </div>
